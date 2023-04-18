@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Food Ordering Website</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .thumb {
+            width: 90%;
+            height: 90%;
+        }
+
+        .title {
+            margin-bottom: 34px;
+        }
+
+        .productcard {
+            display: contents;
+            padding-bottom: 34px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div class="preloader">
+        <img src="./images/preloader.gif" alt="" />
+    </div>
+
+    <header class="header" style="position: relative;">
+        <a href="first.html" class="logo">Quic<span class="yellow">Bytes</span></a>
+
+        <nav class="navbar">
+            <!-- <a href="add.html">Add Restaurant</a> -->
+            <a href="#about">Restaurants</a>
+            <a href="#review">Reviews</a>
+        </nav>
+
+        <!-- Hamburger -->
+        <div class="hamburger">
+            <img src="./images/grid-outline.svg" alt="" />
+        </div>
+    </header>
+
+        <!-- Restaurants -->
+    <section class="about" id="about">
+
+    </section>
+
+    <!--------------Reviews-------------->
+
+    <section class="services" id="services">
+        <div class="top">
+            <h2>&nbsp Reviews &nbsp</h2>
+        </div>
+        <form>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name"><br>
+            <label for="name">Restaurant Name:</label>
+            <input type="text" id="restaurant"><br>
+            <label for="rating">Rating:</label>
+            <select id="rating" name="rating">
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+            </select><br>
+            <label id="review" for="review">Review:</label>
+            <textarea id="desarea" name="review"></textarea><br>
+            <button id="subbtn">Submit</button>
+        </form>
+    </section>
+
+    <!-- Go To Top -->
+    <div class="scroll-top">
+        <img src="./images/arrow-up-outline.svg">
+    </div>
+
+    <!-------Adding JS Files Here---------->
+    <script type="module">
+
+        //------------------------------------Variables for Review -----------------------------------//
+
+        const usname = document.getElementById('name');
+        const restname = document.getElementById('restaurant');
+        const rating = document.getElementById('rating');
+        const description = document.getElementById('desarea');
+        const btn = document.getElementById('subbtn');
+
+        //----------------------------------Functions for Review------------------------------------//
+
+        function gettingShortTitle() {
+            let usnamey = usname.value.substring(0, 50);
+            return usnamey.replace(/[^a-zA-Z0-9]/g, "");
+        }
+
+        function RestoringBack() {
+            btn.disabled = true;
+        }
+
+        //------------------------------------------Events for Review--------------------------------------//
+
+        btn.addEventListener('click', UploadReview);
+
+        //-----------------------------------Firebase for Next Things--------------------------//
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWdERwNBNzPN_gfWfW_0dymHkL4mU3dCc",
+            authDomain: "quicbytes-fdb21.firebaseapp.com",
+            databaseURL: "https://quicbytes-fdb21-default-rtdb.firebaseio.com",
+            projectId: "quicbytes-fdb21",
+            storageBucket: "quicbytes-fdb21.appspot.com",
+            messagingSenderId: "999586333759",
+            appId: "1:999586333759:web:6621762c87deae313be48a",
+            measurementId: "G-7J6W8460WQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // //import Firebase Storage Functions
+        // import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-storage.js";
+
+        //------------------Import Database--------------------//
+        import { getDatabase, ref, set, child, get } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-database.js";
+        const realdb = getDatabase();
+
+
+        var OuterDiv = document.getElementById('about'); //Outer Div or Section is loaded
+        var ArrayOfProducts = [];
+        window.addEventListener('load', GetAllProducts);
+
+        function GetAllProducts() {
+            const dbref = ref(realdb);
+
+            get(child(dbref, "Canteen"))
+                .then((snapshot) => {
+                    snapshot.forEach(prod => {
+                        ArrayOfProducts.push(prod.val());
+                    });
+                    AddAllProducts();
+                }) //Possibility of an Error in thuis region of space
+        }
+
+        function AddAllProducts() {
+            let i = 0;
+            ArrayOfProducts.forEach(prod => {
+                AddAProduct(prod, i++);
+            });
+            AssignAllEvents();
+        }
+
+        function AddAProduct(product, index) {
+            let html =
+            `
+            <div class="image">
+                <img id="thumb" class="thumb" src="`+ product.LinksOfImagesArray[0] + `">
+            </div>
+            <div class="content">
+                <h3 class="title" id="title-`+ index + `">` + getShortTitle(product.NameOfRest) + `</h3>
+                <div>
+                    <p><span id="rating-`+ index + `">Rating : </span> ` + product.Rating + `</p>
+                    <p class="canteen-status"><span style="font-weight: bold;">Status : </span> ` + product.Status + `</p>
+                </div>
+                <a class="detbtns btn" id="detbtn-`+ index + `"> View Menu </a>
+            </div>
+            `
+
+            let newProd = document.createElement('section');
+            newProd.classList.add('productcard');
+            newProd.innerHTML = html;
+            OuterDiv.append(newProd);
+        }
+
+        function getShortTitle(title) {
+            if (title.length > 60) title = title.substring(0, 60);
+            else return title;
+            return title + "...";
+        }
+
+        // function GenerateStockLabel(stock) {
+        //     let stocklabel = document.createElement('h5');
+        //     stocklabel.classList.add('stock');
+
+        //     if (stock > 0) {
+        //         stocklabel.innerHTML = 'In Stock';
+        //         stocklabel.classList.add('text-success');
+        //     }
+        //     else {
+        //         stocklabel.innerHTML = 'Out of Stock';
+        //         stocklabel.classList.add('text-warning');
+        //     }
+        //     return stocklabel.outerHTML;
+        // }
+
+        // function GetUl(array) {
+        //     let ul = document.createElement('ul');
+        //     ul.classList.add('points');
+
+        //     array.forEach(element => {
+        //         let li = document.createElement('li');
+        //         li.innerText = element;
+        //         ul.append(li);
+        //     });
+        //     return ul.outerHTML;
+        // }
+
+        function GetProductIndex(id) {
+            var indstart = id.indexOf('-') + 1;
+            var indend = id.length;
+            return Number(id.substring(indstart, indend));
+        }
+
+        function GotoProductDetails(event) {
+            var index = GetProductIndex(event.target.id);
+            localStorage.Product = JSON.stringify(ArrayOfProducts[index]);
+            console.log(ArrayOfProducts[index]);
+            window.location.href = "product-detailsu.html";
+        }
+
+        function AssignAllEvents() { //All Removes
+            var btns = document.getElementsByClassName('detbtns');
+            var titles = document.getElementsByClassName('title');
+            var thumbs = document.getElementsByClassName('thumb');
+
+            for (let i = 0; i < btns.length; i++) {
+                btns[i].addEventListener('click', GotoProductDetails);
+                titles[i].addEventListener('click', GotoProductDetails);
+                thumbs[i].addEventListener('click', GotoProductDetails);
+            }
+        }
+
+        function UploadReview() {
+            set(ref(realdb, "Reviews/" + gettingShortTitle()), {
+                UserName: usname.value,
+                RestaurantName: restname.value,
+                Rating: rating.value,
+                Comment: description.value
+            });
+            alert("Review Added Successfully");
+            RestoringBack();
+        }
+
+    </script>
+
+    <!----------Non Firebase JavaScript Files------------------>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

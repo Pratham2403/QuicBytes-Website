@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <link rel="stylesheet" href="css/proddtls.css">
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div class="preloader">
+        <img src="./images/preloader.gif" alt="" />
+    </div>
+
+    <header class="header">
+        <a href="" class="logo">Quic<span class="yellow">Bytes</span></a>
+
+        <nav class="navbar">
+            <a href="first.html">Home</a>
+            <a href="mainu.html">Restaurants</a>
+            <!-- <a href="menu.html" class="btn">Add Menu</a> -->
+            <!-- <a href="cart.html">Cart</a>
+            <span id="countCart"></span> -->
+        </nav>
+    </header>
+
+    <!--------------------------Main Info Of Restaurant--------------->
+    <section class="home" id="home">
+        <div class="content">
+            <h1 class="yellow" id="title"></h1>
+            <p id="price" style="font-weight: bold; font-size: 21px;"></p>
+            <!-- <a href="#" class="home-btn">Go to Menu</a> -->
+            <div class="divss">
+                <button id="thumbup" disabled><img class="emoji" src="images/thumbs-up.svg"></button>
+                <button id="thumbdown" disabled><img class="emoji" src="images/thumbs-down.svg"></button>
+            </div>
+            <span class="votes">Net Upvotes: &nbsp &nbsp<span id="countSpan"></span></span>
+        </div>
+        <div class="image">
+            <img id="bigimg" src="">
+        </div>
+    </section>
+
+    <section class="services" id="services">
+        <div class="top">
+            <h2><span class="yellow">Our</span> Menu</h2>
+            <p>
+                Order your favourite food from out large no of options.
+            </p>
+        </div>
+
+    </section>
+
+    <!-- Go To Top -->
+    <div class="scroll-top">
+        <img src="./images/arrow-up-outline.svg" alt="" />
+    </div>
+
+
+    <script type="module">
+        let products = null;
+
+        window.onload = function () {
+            products = localStorage.Product;
+            if (products) {
+                products = JSON.parse(products);
+                LoadProduct();
+            }
+        }
+
+
+        function LoadProduct() {
+            document.getElementById('bigimg').src = products.LinksOfImagesArray[0];
+            document.getElementById('title').innerHTML = products.NameOfRest;
+            document.getElementById('price').innerHTML = "Status : " + products.Status;
+        } //----Use Above Stock Think To Show Status in Red ----//
+
+
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWdERwNBNzPN_gfWfW_0dymHkL4mU3dCc",
+            authDomain: "quicbytes-fdb21.firebaseapp.com",
+            databaseURL: "https://quicbytes-fdb21-default-rtdb.firebaseio.com",
+            projectId: "quicbytes-fdb21",
+            storageBucket: "quicbytes-fdb21.appspot.com",
+            messagingSenderId: "999586333759",
+            appId: "1:999586333759:web:6621762c87deae313be48a",
+            measurementId: "G-7J6W8460WQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // //import Firebase Storage Functions
+        // import { getStorage, ref as sRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-storage.js";
+
+        //------------------Import Database--------------------//
+        import { getDatabase, ref, set, child, get, onValue } from "https://www.gstatic.com/firebasejs/9.18.0/firebase-database.js";
+        const realdb = getDatabase();
+
+
+        var OuterDiv = document.getElementById('services'); //Outer Div or Section is loaded
+        var ArrayOfProducts = [];
+        window.addEventListener('load', GetAllProducts);
+
+        function GetAllProducts() {
+            const dbref = ref(realdb);
+
+            get(child(dbref, "Menu/" + products.NameOfRest))
+                .then((snapshot) => {
+                    snapshot.forEach(prod => {
+                        ArrayOfProducts.push(prod.val());
+                    });
+                    AddAllProducts();
+                }) //Possibility of an Error in thuis region of space
+        }
+
+        function AddAllProducts() {
+            let i = 0;
+            ArrayOfProducts.forEach(prod => {
+                AddAProduct(prod, i++);
+            });
+            // AssignAllEvents();
+        }
+
+        function AddAProduct(product, index) {
+            let html =
+                `
+        <div class="box">
+            <img class="thumb" id="thumb" src="`+ product.LinkOfImagesArray[0] + `">
+            <h4 class="title" id="title-`+ index + `">` + getShortTitle(product.NameOfProduct) + `</h4>
+            <p class="" id="prices-`+ index + `">Rs. ` + product.Price + `</p>
+            <p class="av" id="avails-`+ index + `">` + product.Availability + `</p>
+            <a class="detbtns btn" id="detbtn-` + index + `" disabled>Add To Cart</a>
+        </div>
+        `
+
+            let newProd = document.createElement('div');
+            newProd.classList.add('bottom');
+            newProd.innerHTML = html;
+            OuterDiv.append(newProd);
+        }
+
+
+        function getShortTitle(title) {
+            if (title.length > 60) title = title.substring(0, 60);
+            else return title;
+            return title + "...";
+        }
+
+
+
+        function GetProductIndex(id) {
+            var indstart = id.indexOf('-') + 1;
+            var indend = id.length;
+            return Number(id.substring(indstart, indend));
+        }
+
+        //-----------------------References and Functions for Plus and Minus------------//
+
+
+        let span = document.getElementById('countSpan');
+        let inc = document.getElementById('thumbup');
+        let dec = document.getElementById('thumbdown');
+        let countVariable;
+
+        window.addEventListener('load', function () {
+            const dbref = ref(realdb);
+
+            // Retrieve the Count value from the database
+            get(child(dbref, "Counter/" + products.NameOfRest + "/Count")).then((snapshot) => {
+                countVariable = Number(snapshot.val());
+                span.innerHTML = countVariable;
+                BtnsEnable();
+            });
+        });
+
+
+        function IncDecCounter() {
+            BtnsDisable();
+
+            const dbref = ref(realdb);
+
+            // Retrieve the Count value from the database
+            get(child(dbref, "Counter/" + products.NameOfRest + "/Count")).then((snapshot) => {
+                countVariable = Number(snapshot.val());
+
+                if (this.id == 'thumbup') countVariable++;
+                else countVariable--;
+
+                // Update the Count value in the database
+                set(child(dbref, "Counter/" + products.NameOfRest + "/Count"), countVariable);
+
+                span.innerHTML = countVariable;
+                BtnsEnable();
+            }).catch(() => {
+                // Create the Counter node if it doesn't exist
+                set(child(dbref, "Counter/" + products.NameOfRest + "/Count"), 0).then(() => {
+                    IncDecCounter();
+                });
+            });
+        }
+
+        function BtnsEnable() {
+            inc.disabled = false;
+            dec.disabled = false;
+        }
+
+        function BtnsDisable() {
+            inc.disabled = true;
+            dec.disabled = true;
+        }
+
+        inc.addEventListener('click', IncDecCounter);
+        dec.addEventListener('click', IncDecCounter);
+
+
+    </script>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
